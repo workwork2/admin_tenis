@@ -1,23 +1,7 @@
-import { AuthPage } from "@components/auth-page";
-import { authProviderServer } from "@providers/auth-provider/auth-provider.server";
-import { redirect } from "next/navigation";
+// src/app/register/page.tsx
+"use client";
+import { AuthPage } from "@refinedev/antd";
 
-export default async function Register() {
-  const data = await getData();
-
-  if (data.authenticated) {
-    redirect(data?.redirectTo || "/");
-  }
-
-  return <AuthPage type="register" />;
-}
-
-async function getData() {
-  const { authenticated, redirectTo, error } = await authProviderServer.check();
-
-  return {
-    authenticated,
-    redirectTo,
-    error,
-  };
+export default function Register() {
+  return <AuthPage type="register" title="Padel Админка" />;
 }
