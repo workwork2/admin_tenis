@@ -6,32 +6,18 @@ import { IUser, IClub, ITournament } from "@/interfaces";
 
 let mockUsers: IUser[] =[
     { id: 8493021, firstName: "Андрей", lastName: "Волков", middleName: "Иванович", email: "volkov@example.com", city: "Ярославль", rating: 180, preferences: { hand: "Правая", side: "Правый", gameType: "Турниры" } },
-    { id: 8493022, firstName: "Иван", lastName: "Иванов", email: "ivan@test.ru", city: "Москва", rating: 120, preferences: { hand: "Левая", side: "Левый", gameType: "Оба" } }
+    { id: 8493022, firstName: "Иван", lastName: "Иванов", email: "ivan@test.ru", city: "Москва", rating: 120, preferences: { hand: "Левая", side: "Левый", gameType: "Оба" } },
+    { id: 8493023, firstName: "Елена", lastName: "Смирнова", email: "elena@padel.ru", city: "Санкт-Петербург", rating: 250, preferences: { hand: "Правая", side: "Левый", gameType: "Турниры" } }
 ];
 
 let mockClubs: IClub[] =[
-    {
-        id: 1, name: "Клубный клуб", address: "Москва, ул. Лужники, 24", workingHours: "07:00 - 23:00", phone: "+7 (999) 123-45-67", email: "info@padelclub.ru", status: "approved",
-        ownerName: "Игорь Владельцев",
-        logo: "https://i.pravatar.cc/150?img=11",
-        managers:[
-            { id: 101, name: "Алексей Смирнов", role: "Менеджер" },
-            { id: 102, name: "Мария Иванова", role: "Админ" }
-        ]
-    }
+    { id: 1, name: "Клубный клуб", address: "Москва, ул. Лужники, 24", workingHours: "07:00 - 23:00", phone: "+7 (999) 123-45-67", email: "info@padelclub.ru", status: "approved", ownerName: "Игорь Владельцев", logo: "https://i.pravatar.cc/150?img=11", managers:[{ id: 101, name: "Алексей Смирнов", role: "Менеджер" }, { id: 102, name: "Мария Иванова", role: "Админ" }] },
+    { id: 2, name: "Новый Падел Арена", address: "Санкт-Петербург, Невский пр-т, 1", workingHours: "10:00 - 22:00", email: "newarena@padel.ru", status: "pending", managers: [] }
 ];
 
 let mockTournaments: ITournament[] =[
-    {
-        id: 1, clubId: 1, title: "Weekend Padel Cup", type: "Любители", format: "Олимпийский формат", level: "<300", maxPlayers: 32, fee: 2500,
-        startDate: "2024-06-15", startTime: "10:00", endDate: "2024-06-16", endTime: "20:00", status: "active", coverImage: "https://i.pravatar.cc/300?img=15",
-        participantIds: [8493021, 8493022] // ДОБАВИЛИ УЧАСТНИКОВ В ТУРНИР
-    },
-    {
-        id: 2, clubId: 1, title: "Winter Grand Slam", type: "PRO", format: "Круговой формат", level: "Open", maxPlayers: 16, fee: 5000,
-        startDate: "2024-12-01", startTime: "09:00", endDate: "2024-12-02", endTime: "18:00", status: "inactive",
-        participantIds:[]
-    }
+    { id: 1, clubId: 1, title: "Weekend Padel Cup", type: "Любители", format: "Олимпийский формат", level: "<300", maxPlayers: 32, fee: 2500, startDate: "2024-06-15", startTime: "10:00", endDate: "2024-06-16", endTime: "20:00", status: "active", coverImage: "https://i.pravatar.cc/300?img=15", participantIds:[8493021, 8493022] },
+    { id: 2, clubId: 1, title: "Winter Grand Slam", type: "PRO", format: "Круговой формат", level: "Open", maxPlayers: 16, fee: 5000, startDate: "2024-12-01", startTime: "09:00", endDate: "2024-12-02", endTime: "18:00", status: "inactive", participantIds:[] }
 ];
 
 export const mockDataProvider: DataProvider = {
@@ -41,9 +27,18 @@ export const mockDataProvider: DataProvider = {
         if (resource === "clubs") data = mockClubs;
         if (resource === "tournaments") data = mockTournaments;
 
+        // ОБНОВЛЕННАЯ ЛОГИКА ФИЛЬТРАЦИИ ПОИСКА
         if (filters && filters.length > 0) {
             filters.forEach((filter: any) => {
-                data = data.filter(item => item[filter.field]?.toString() === filter.value.toString());
+                if (filter.operator === "contains" && filter.value) {
+                    // Поиск по части слова
+                    data = data.filter(item => 
+                        item[filter.field]?.toString().toLowerCase().includes(filter.value.toString().toLowerCase())
+                    );
+                } else if (filter.operator === "eq" && filter.value !== undefined) {
+                    // Строгое совпадение
+                    data = data.filter(item => item[filter.field]?.toString() === filter.value.toString());
+                }
             });
         }
         return { data, total: data.length };

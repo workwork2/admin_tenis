@@ -1,8 +1,10 @@
 // src/app/tournaments/edit/[id]/page.tsx
 "use client";
 
+import { useState } from "react";
 import { Edit, useForm } from "@refinedev/antd";
 import { Form, Input, Select, InputNumber, Row, Col, Typography, Tabs, Table, Tag } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { ITournament, IUser } from "@/interfaces";
 import { useList } from "@refinedev/core";
 
@@ -12,15 +14,23 @@ export default function TournamentEdit() {
     const { formProps, saveButtonProps, query } = useForm<ITournament>();
     const tournamentData = query?.data?.data;
 
-    // Безопасное получение списка ВСЕХ пользователей
+    // Состояние для строки поиска по участникам
+    const [searchParticipant, setSearchParticipant] = useState("");
+
     const rawUsers = useList<IUser>({ resource: "users" }) as any;
     const usersQuery = rawUsers?.query || rawUsers;
     const allUsers = usersQuery?.data?.data ||[];
 
-    // Фильтруем пользователей: оставляем только тех, чей ID есть в participantIds турнира
+    // 1. Получаем всех участников турнира
     const tournamentParticipants = allUsers.filter((user: IUser) => 
         tournamentData?.participantIds?.includes(user.id)
     );
+
+    // 2. Фильтруем участников на лету по введенному тексту (Имя или Фамилия)
+    const filteredParticipants = tournamentParticipants.filter((user: IUser) => {
+        const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+        return fullName.includes(searchParticipant.toLowerCase());
+    });
 
     return (
         <Edit saveButtonProps={saveButtonProps} title="Редактирование турнира">
@@ -117,16 +127,27 @@ export default function TournamentEdit() {
                     key: "2",
                     label: `Участники турнира (${tournamentParticipants.length})`,
                     children: (
-                        <Table dataSource={tournamentParticipants} rowKey="id" pagination={false}>
-                            <Table.Column dataIndex="firstName" title="Имя" />
-                            <Table.Column dataIndex="lastName" title="Фамилия" />
-                            <Table.Column dataIndex="rating" title="Рейтинг" render={(val) => <Tag color="blue">{val}</Tag>} />
-                            <Table.Column<IUser> 
-                                title="Рабочая рука" 
-                                render={(_, record) => record.preferences?.hand || "Не указана"} 
+                        <>
+                            {/* ЛОКАЛЬНЫЙ ПОИСК ПО УЧАСТНИКАМ ТУРНИРА */}
+                            <Input 
+                                placeholder="Найти игрока (по имени или фамилии)..." 
+                                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                                value={searchParticipant}
+                                onChange={(e) => setSearchParticipant(e.target.value)}
+                                style={{ marginBottom: '16px', maxWidth: '400px', borderRadius: '8px' }}
+                                size="large"
                             />
-                            <Table.Column dataIndex="city" title="Город" />
-                        </Table>
+                            <Table dataSource={filteredParticipants} rowKey="id" pagination={{ pageSize: 10 }}>
+                                <Table.Column dataIndex="firstName" title="Имя" />
+                                <Table.Column dataIndex="lastName" title="Фамилия" />
+                                <Table.Column dataIndex="rating" title="Рейтинг" render={(val) => <Tag color="blue">{val}</Tag>} />
+                                <Table.Column<IUser> 
+                                    title="Рабочая рука" 
+                                    render={(_, record) => record.preferences?.hand || "Не указана"} 
+                                />
+                                <Table.Column dataIndex="city" title="Город" />
+                            </Table>
+                        </>
                     )
                 }
             ]} />
