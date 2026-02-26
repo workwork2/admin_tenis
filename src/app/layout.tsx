@@ -1,5 +1,5 @@
 // src/app/layout.tsx
-import React from "react";
+import React, { Suspense } from "react"; // 1. ДОБАВЛЕН ИМПОРТ Suspense
 import RefineProvider from "./refine-provider";
 
 export const metadata = {
@@ -15,9 +15,12 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body>
-        <RefineProvider>
-          {children}
-        </RefineProvider>
+        {/* 2. ОБОРАЧИВАЕМ RefineProvider В Suspense */}
+        <Suspense fallback={null}>
+          <RefineProvider>
+            {children}
+          </RefineProvider>
+        </Suspense>
       </body>
     </html>
   );
