@@ -1,7 +1,7 @@
 // src/app/refine-provider.tsx
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react"; // <-- 1. ДОБАВЬТЕ ИМПОРТ Suspense
 import { Refine } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import { useNotificationProvider } from "@refinedev/antd";
@@ -10,7 +10,6 @@ import { AntdRegistry } from "@ant-design/nextjs-registry";
 import "@refinedev/antd/dist/reset.css";
 
 import { authProvider } from "@/providers/auth-provider/auth-provider.client";
-
 import { ColorModeContextProvider } from "@/contexts/color-mode";
 import { mockDataProvider } from "@providers/auth-provider/mock-data-provider";
 
@@ -21,7 +20,7 @@ export default function RefineProvider({ children }: { children: React.ReactNode
         <ColorModeContextProvider>
           <Refine
             routerProvider={routerProvider}
-            dataProvider={mockDataProvider} // <-- ПОДКЛЮЧИЛИ СЮДА
+            dataProvider={mockDataProvider}
             authProvider={authProvider}
             notificationProvider={useNotificationProvider}
             resources={[
@@ -42,17 +41,20 @@ export default function RefineProvider({ children }: { children: React.ReactNode
                 meta: { label: "Клубы (Заявки)", icon: "🏟️" },
               },
               {
-  name: "tournaments",
-  list: "/tournaments",
-  create: "/tournaments/create",
-  edit: "/tournaments/edit/:id",
-  meta: { label: "Турниры", icon: "🏆" },
-},
+                 name: "tournaments",
+                 list: "/tournaments",
+                 create: "/tournaments/create",
+                 edit: "/tournaments/edit/:id",
+                 meta: { label: "Турниры", icon: "🏆" },
+              },
             ]}
             options={{ syncWithLocation: true, warnWhenUnsavedChanges: true }}
           >
             {children}
-            <RefineKbar />
+            {/* 2. ОБЕРНИТЕ RefineKbar В Suspense */}
+            <Suspense fallback={null}>
+              <RefineKbar />
+            </Suspense>
           </Refine>
         </ColorModeContextProvider>
       </AntdRegistry>
