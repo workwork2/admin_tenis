@@ -5,14 +5,14 @@ import { DataProvider } from "@refinedev/core";
 import { IUser, IClub, ITournament } from "@/interfaces";
 
 let mockUsers: IUser[] =[
-    { id: 8493021, firstName: "Андрей", lastName: "Волков", middleName: "Иванович", email: "volkov@example.com", city: "Ярославль", rating: 180, preferences: { hand: "Правая", side: "Правый", gameType: "Турниры" } },
-    { id: 8493022, firstName: "Иван", lastName: "Иванов", email: "ivan@test.ru", city: "Москва", rating: 120, preferences: { hand: "Левая", side: "Левый", gameType: "Оба" } },
-    { id: 8493023, firstName: "Елена", lastName: "Смирнова", email: "elena@padel.ru", city: "Санкт-Петербург", rating: 250, preferences: { hand: "Правая", side: "Левый", gameType: "Турниры" } }
+    { id: 8493021, firstName: "Андрей", lastName: "Волков", middleName: "Иванович", email: "volkov@example.com", city: "Ярославль", rating: 180, status: 'active', preferences: { hand: "Правая", side: "Правый", gameType: "Турниры" } },
+    { id: 8493022, firstName: "Иван", lastName: "Иванов", email: "ivan@test.ru", city: "Москва", rating: 120, status: 'active', preferences: { hand: "Левая", side: "Левый", gameType: "Оба" } },
+    { id: 8493023, firstName: "Елена", lastName: "Смирнова", email: "elena@padel.ru", city: "Санкт-Петербург", rating: 250, status: 'active', preferences: { hand: "Правая", side: "Левый", gameType: "Турниры" } }
 ];
 
 let mockClubs: IClub[] =[
     { id: 1, name: "Клубный клуб", address: "Москва, ул. Лужники, 24", workingHours: "07:00 - 23:00", phone: "+7 (999) 123-45-67", email: "info@padelclub.ru", status: "approved", ownerName: "Игорь Владельцев", logo: "https://i.pravatar.cc/150?img=11", managers:[{ id: 101, name: "Алексей Смирнов", role: "Менеджер" }, { id: 102, name: "Мария Иванова", role: "Админ" }] },
-    { id: 2, name: "Новый Падел Арена", address: "Санкт-Петербург, Невский пр-т, 1", workingHours: "10:00 - 22:00", email: "newarena@padel.ru", status: "pending", managers: [] }
+    { id: 2, name: "Новый Падел Арена", address: "Санкт-Петербург, Невский пр-т, 1", workingHours: "10:00 - 22:00", email: "newarena@padel.ru", status: "pending", managers:[] }
 ];
 
 let mockTournaments: ITournament[] =[
@@ -27,16 +27,11 @@ export const mockDataProvider: DataProvider = {
         if (resource === "clubs") data = mockClubs;
         if (resource === "tournaments") data = mockTournaments;
 
-        // ОБНОВЛЕННАЯ ЛОГИКА ФИЛЬТРАЦИИ ПОИСКА
         if (filters && filters.length > 0) {
             filters.forEach((filter: any) => {
                 if (filter.operator === "contains" && filter.value) {
-                    // Поиск по части слова
-                    data = data.filter(item => 
-                        item[filter.field]?.toString().toLowerCase().includes(filter.value.toString().toLowerCase())
-                    );
+                    data = data.filter(item => item[filter.field]?.toString().toLowerCase().includes(filter.value.toString().toLowerCase()));
                 } else if (filter.operator === "eq" && filter.value !== undefined) {
-                    // Строгое совпадение
                     data = data.filter(item => item[filter.field]?.toString() === filter.value.toString());
                 }
             });
@@ -56,7 +51,7 @@ export const mockDataProvider: DataProvider = {
     },
     create: async ({ resource, variables }) => {
         const newObj = { ...(variables as any), id: Math.floor(Math.random() * 1000000) };
-        if (resource === "users") mockUsers.push(newObj);
+        if (resource === "users") mockUsers.push({ ...newObj, status: 'active' });
         if (resource === "clubs") mockClubs.push({ ...newObj, status: 'pending' });
         if (resource === "tournaments") mockTournaments.push({ ...newObj, status: 'active' });
         return { data: newObj as any };

@@ -8,6 +8,8 @@ export interface IUser {
     email: string;
     city?: string;
     rating?: number;
+    status: 'active' | 'banned'; // СТАТУС ПОЛЬЗОВАТЕЛЯ
+    banUntil?: string;           // ЗАБАНЕН ДО (дата)
     preferences?: {
         hand: 'Левая' | 'Правая' | 'Обе';
         side: 'Левый' | 'Правый' | 'Оба';
@@ -30,7 +32,8 @@ export interface IClub {
     email: string;
     phone?: string;
     description?: string;
-    status: 'pending' | 'approved' | 'rejected';
+    status: 'pending' | 'approved' | 'rejected' | 'banned'; // ДОБАВИЛИ BANNED
+    banUntil?: string; // ЗАБАНЕН ДО
     logo?: string;
     ownerName?: string;
     managers?: IManager[];
@@ -52,5 +55,5 @@ export interface ITournament {
     description?: string;
     coverImage?: string;
     status: 'active' | 'inactive';
-    participantIds?: number[]; // НОВОЕ ПОЛЕ: Массив ID участников
+    participantIds?: number[];
 }

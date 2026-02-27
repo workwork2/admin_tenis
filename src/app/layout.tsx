@@ -1,7 +1,7 @@
 // src/app/layout.tsx
 import React, { Suspense } from "react"; // 1. ДОБАВЛЕН ИМПОРТ Suspense
 import RefineProvider from "./refine-provider";
-
+import '@ant-design/v5-patch-for-react-19'; 
 export const metadata = {
   title: "Padel Club Admin",
   description: "Админ-панель для управления клубами и игроками",
