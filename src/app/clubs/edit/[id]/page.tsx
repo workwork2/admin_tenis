@@ -1,97 +1,55 @@
-// src/app/clubs/edit/[id]/page.tsx
 "use client";
 
-import { Edit, useForm } from "@refinedev/antd";
-import { Form, Input, Select, Divider, Space, Button, Typography, Tabs, Table, Tag, Avatar, Row, Col } from "antd";
-import { PlusOutlined, MinusCircleOutlined, EditOutlined, PictureOutlined } from "@ant-design/icons";
-import { IClub, ITournament } from "@/interfaces";
-import { useList, useNavigation } from "@refinedev/core";
+import { useForm } from "@refinedev/antd";
+import { Form, Input, Typography, Button, Card, Row, Col } from "antd";
+import { IClub } from "@/interfaces";
+import { PictureOutlined } from "@ant-design/icons";
+
+const { Title, Text } = Typography;
 
 export default function ClubEdit() {
-    const { formProps, saveButtonProps, query, id } = useForm<IClub>();
+    const { formProps, saveButtonProps, query } = useForm<IClub>();
     const clubData = query?.data?.data;
-    const { edit } = useNavigation();
-
-    // Следим за статусом для отображения даты бана
-    const currentStatus = Form.useWatch('status', formProps.form);
-
-    const rawTournaments = useList<ITournament>({ resource: "tournaments", filters:[{ field: "clubId", operator: "eq", value: id }] }) as any;
-    const tournamentsQuery = rawTournaments?.query || rawTournaments;
 
     return (
-        <Edit saveButtonProps={saveButtonProps} title="Управление клубом">
-            <Tabs defaultActiveKey="1" items={[
-                {
-                    key: "1",
-                    label: "Информация",
-                    children: (
-                        <Form {...formProps} form={formProps.form} layout="vertical">
-                            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', backgroundColor: '#f5f5f5', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-                                <Avatar shape="square" size={100} src={clubData?.logo} icon={<PictureOutlined />} />
-                                <div style={{ flex: 1 }}>
-                                    <Form.Item label="URL Логотипа" name="logo" style={{ marginBottom: '12px' }}><Input /></Form.Item>
-                                    <Form.Item label="Владелец" name="ownerName" style={{ marginBottom: 0 }}>
-                                        <Input readOnly variant="borderless" style={{ fontWeight: 'bold', fontSize: '16px', padding: 0 }} />
-                                    </Form.Item>
-                                </div>
+        <div style={{ backgroundColor: '#f0f2f5', minHeight: '100vh', padding: '40px' }}>
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                <Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    
+                    <Row align="middle" style={{ marginBottom: 32, backgroundColor: '#fafafa', padding: 16, borderRadius: 8, border: '1px solid #f0f0f0' }}>
+                        <Col flex="100px">
+                            <div style={{ width: 80, height: 80, backgroundColor: '#e6f4ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <PictureOutlined style={{ fontSize: 24, color: '#1677ff' }} />
                             </div>
+                        </Col>
+                        <Col flex="auto">
+                            <Title level={4} style={{ margin: 0 }}>{clubData?.name || 'Клуб'}</Title>
+                            <Text type="secondary">{clubData?.city}</Text>
+                        </Col>
+                        <Col>
+                            <Button>Загрузить логотип</Button>
+                        </Col>
+                    </Row>
 
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item label="Статус клуба" name="status">
-                                        <Select options={[
-                                            { label: "🟡 Ожидает проверки", value: "pending" },
-                                            { label: "🟢 Одобрен (Активен)", value: "approved" },
-                                            { label: "🔴 Отклонен", value: "rejected" },
-                                            { label: "⚫ Заблокирован (Бан)", value: "banned" }
-                                        ]} />
-                                    </Form.Item>
-                                </Col>
-                                {currentStatus === 'banned' && (
-                                    <Col span={12}>
-                                        <Form.Item label="Заблокирован до (Дата)" name="banUntil">
-                                            <Input type="date" />
-                                        </Form.Item>
-                                    </Col>
-                                )}
-                            </Row>
+                    <Form {...formProps} form={formProps.form} layout="vertical">
+                        <Form.Item label="Название клуба" name="name"><Input size="large" /></Form.Item>
+                        <Row gutter={16}>
+                            <Col span={12}><Form.Item label="Город" name="city"><Input size="large" /></Form.Item></Col>
+                            <Col span={12}><Form.Item label="Адрес" name="address"><Input size="large" /></Form.Item></Col>
+                        </Row>
+                        <Row gutter={16}>
+                            <Col span={8}><Form.Item label="Часы работы" name="workingHours"><Input size="large" /></Form.Item></Col>
+                            <Col span={8}><Form.Item label="Телефон" name="phone"><Input size="large" /></Form.Item></Col>
+                            <Col span={8}><Form.Item label="Email" name="email"><Input size="large" /></Form.Item></Col>
+                        </Row>
+                        <Form.Item label="Описание" name="description"><Input.TextArea rows={4} /></Form.Item>
 
-                            <Form.Item label="Название клуба" name="name" rules={[{ required: true }]}><Input /></Form.Item>
-                            
-                            <Divider>Менеджеры клуба</Divider>
-                            <Form.List name="managers">
-                                {(fields, { add, remove }) => (
-                                    <>
-                                        {fields.map(({ key, name, ...restField }) => (
-                                            <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                                                <Form.Item {...restField} name={[name, 'name']} rules={[{ required: true }]}><Input placeholder="ФИО Менеджера" /></Form.Item>
-                                                <Form.Item {...restField} name={[name, 'role']} rules={[{ required: true }]} style={{ width: 150 }}>
-                                                    <Select placeholder="Роль" options={[{ label: "Админ", value: "Админ" }, { label: "Менеджер", value: "Менеджер" }]} />
-                                                </Form.Item>
-                                                <MinusCircleOutlined onClick={() => remove(name)} style={{ color: 'red' }} />
-                                            </Space>
-                                        ))}
-                                        <Form.Item><Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>Добавить менеджера</Button></Form.Item>
-                                    </>
-                                )}
-                            </Form.List>
-                        </Form>
-                    )
-                },
-                {
-                    key: "2",
-                    label: "Турниры",
-                    children: (
-                        <Table dataSource={tournamentsQuery?.data?.data} loading={tournamentsQuery?.isLoading} rowKey="id" pagination={false}>
-                            <Table.Column dataIndex="title" title="Название" />
-                            <Table.Column dataIndex="startDate" title="Дата" />
-                            <Table.Column<ITournament> title="Действия" render={(_, record) => (
-                                <Button size="small" icon={<EditOutlined />} onClick={() => edit("tournaments", record.id)}>Редактировать</Button>
-                            )} />
-                        </Table>
-                    )
-                }
-            ]} />
-        </Edit>
-    );
+                        <Button type="primary" size="large" onClick={saveButtonProps.onClick} style={{ marginTop: 16 }}>
+                            Сохранить изменения
+                        </Button>
+                    </Form>
+                </Card>
+            </div>
+        </div>
+    )
 }

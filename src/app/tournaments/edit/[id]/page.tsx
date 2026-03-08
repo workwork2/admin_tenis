@@ -1,156 +1,164 @@
-// src/app/tournaments/edit/[id]/page.tsx
 "use client";
 
 import { useState } from "react";
-import { Edit, useForm } from "@refinedev/antd";
-import { Form, Input, Select, InputNumber, Row, Col, Typography, Tabs, Table, Tag } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import { ITournament, IUser } from "@/interfaces";
-import { useList } from "@refinedev/core";
+import { useForm } from "@refinedev/antd";
+import { Input, Select, Row, Col, Typography, Button, Tabs, Card, Space } from "antd";
+import { ITournament } from "@/interfaces";
 
-const { Text } = Typography;
+const { Title, Text } = Typography;
 
 export default function TournamentEdit() {
-    const { formProps, saveButtonProps, query } = useForm<ITournament>();
+    const { query } = useForm<ITournament>();
     const tournamentData = query?.data?.data;
+    const [bracketFormat, setBracketFormat] = useState<string>("Олимпийский формат (Плей-офф)");
 
-    // Состояние для строки поиска по участникам
-    const [searchParticipant, setSearchParticipant] = useState("");
-
-    const rawUsers = useList<IUser>({ resource: "users" }) as any;
-    const usersQuery = rawUsers?.query || rawUsers;
-    const allUsers = usersQuery?.data?.data ||[];
-
-    // 1. Получаем всех участников турнира
-    const tournamentParticipants = allUsers.filter((user: IUser) => 
-        tournamentData?.participantIds?.includes(user.id)
+    // --- ФУНКЦИИ РЕНДЕРА СЕТОК ---
+    
+    // Олимпийская (Сеты)
+    const renderOlympic = () => (
+        <Card bordered style={{ borderColor: '#e6f4ff', backgroundColor: '#fafafa', marginBottom: 16 }}>
+            <Title level={5} style={{ color: '#1677ff' }}>1/4 ФИНАЛА</Title>
+            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: '8px', padding: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <Text strong>Волков А.В. / Иванов М.С.</Text>
+                    <Space>
+                        <Input defaultValue="6" style={{ width: '40px', textAlign: 'center' }} />
+                        <Input defaultValue="4" style={{ width: '40px', textAlign: 'center' }} />
+                        <Input placeholder="-" style={{ width: '40px', textAlign: 'center' }} />
+                    </Space>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text>Соколов Д.Н. / Петров Е.А.</Text>
+                    <Space>
+                        <Input defaultValue="4" style={{ width: '40px', textAlign: 'center' }} />
+                        <Input defaultValue="6" style={{ width: '40px', textAlign: 'center' }} />
+                        <Input placeholder="-" style={{ width: '40px', textAlign: 'center' }} />
+                    </Space>
+                </div>
+            </div>
+        </Card>
     );
 
-    // 2. Фильтруем участников на лету по введенному тексту (Имя или Фамилия)
-    const filteredParticipants = tournamentParticipants.filter((user: IUser) => {
-        const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-        return fullName.includes(searchParticipant.toLowerCase());
-    });
+    // Американо (Очки)
+    const renderAmericano = () => (
+        <Card bordered style={{ borderColor: '#e6f4ff', backgroundColor: '#fafafa', marginBottom: 16 }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                Вводите заработанные очки за матч. Обычно сумма очков равна 32 или 24.
+            </Text>
+            <Title level={5} style={{ color: '#1677ff', marginTop: 16 }}>РАУНД 1</Title>
+            
+            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: '8px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text strong style={{ width: '30%', textAlign: 'right' }}>Волков А.В. / Иванов М.С.</Text>
+                <Space align="center">
+                    <Input defaultValue="18" style={{ width: '60px', textAlign: 'center', fontWeight: 'bold', color: '#1677ff', borderColor: '#1677ff' }} />
+                    <Text>-</Text>
+                    <Input defaultValue="14" style={{ width: '60px', textAlign: 'center', fontWeight: 'bold', color: '#1677ff', borderColor: '#1677ff' }} />
+                </Space>
+                <Text strong style={{ width: '30%' }}>Соколов Д.Н. / Петров Е.А.</Text>
+            </div>
+        </Card>
+    );
+
+    // Круговой (Сеты 2:0)
+    const renderRoundRobin = () => (
+        <Card bordered style={{ borderColor: '#e6f4ff', backgroundColor: '#fafafa', marginBottom: 16 }}>
+            <Text type="secondary">Вводите итоговый счет матча (например, 2-0 или 2-1 по сетам).</Text>
+            <div style={{ backgroundColor: '#fff', border: '1px solid #d9d9d9', borderRadius: '8px', padding: '16px', marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text strong style={{ width: '30%', textAlign: 'right' }}>Волков А.В. / Иванов М.С.</Text>
+                <Space align="center">
+                    <Input defaultValue="2" style={{ width: '50px', textAlign: 'center', fontWeight: 'bold' }} />
+                    <Text>:</Text>
+                    <Input defaultValue="1" style={{ width: '50px', textAlign: 'center', fontWeight: 'bold' }} />
+                </Space>
+                <Text strong style={{ width: '30%' }}>Соколов Д.Н. / Петров Е.А.</Text>
+            </div>
+        </Card>
+    );
 
     return (
-        <Edit saveButtonProps={saveButtonProps} title="Редактирование турнира">
-            <Tabs defaultActiveKey="1" items={[
+        <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto', backgroundColor: '#fff', minHeight: '100vh' }}>
+            <Tabs defaultActiveKey="bracket" size="large" items={[
                 {
-                    key: "1",
-                    label: "Настройки турнира",
+                    key: 'info',
+                    label: 'Параметры турнира',
                     children: (
-                        <Form {...formProps} form={formProps.form} layout="vertical">
-                            
-                            <Row justify="space-between" align="middle" style={{ marginBottom: 20, padding: 15, background: '#f5f5f5', borderRadius: 8 }}>
-                                <Text strong>Статус турнира (Активен / Неактивен)</Text>
-                                <Form.Item name="status" style={{ margin: 0 }}>
-                                    <Select options={[
-                                        { label: "🟢 Активен", value: "active" },
-                                        { label: "⚪ Неактивен / Завершен", value: "inactive" }
-                                    ]} style={{ width: 200 }} />
-                                </Form.Item>
-                            </Row>
-
-                            <Form.Item label="URL Обложки турнира" name="coverImage">
-                                <Input placeholder="https://..." />
-                            </Form.Item>
-
-                            <Form.Item label="НАЗВАНИЕ ТУРНИРА" name="title" rules={[{ required: true }]}>
-                                <Input size="large" />
-                            </Form.Item>
-
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item label="ФОРМАТ ИГРЫ" name="format">
-                                        <Select size="large" options={[
-                                            { label: "Олимпийский формат", value: "Олимпийский формат" },
-                                            { label: "Круговой формат", value: "Круговой формат" },
-                                            { label: "Группы + Плей-офф", value: "Группы + Плей-офф" },
-                                            { label: "Мексикано", value: "Мексикано" },
-                                            { label: "Американо", value: "Американо" },
-                                        ]} />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item label="УРОВЕНЬ" name="level">
-                                        <Input size="large" placeholder="<300" />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item label="МАКС. ИГРОКОВ (ПАР)" name="maxPlayers">
-                                        <InputNumber size="large" style={{ width: '100%' }} min={2} />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item label="ВЗНОС (₽)" name="fee">
-                                        <InputNumber size="large" style={{ width: '100%' }} min={0} step={500} />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item label="ДАТА НАЧАЛА" name="startDate">
-                                        <Input size="large" type="date" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item label="ВРЕМЯ НАЧАЛА" name="startTime">
-                                        <Input size="large" type="time" />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item label="ДАТА ОКОНЧАНИЯ" name="endDate">
-                                        <Input size="large" type="date" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item label="ВРЕМЯ ОКОНЧАНИЯ" name="endTime">
-                                        <Input size="large" type="time" />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            <Form.Item label="ОПИСАНИЕ И ПРАВИЛА" name="description">
-                                <Input.TextArea rows={5} placeholder="Опишите правила турнира, доп. условия, призовой фонд..." />
-                            </Form.Item>
-                        </Form>
+                        <Card bordered={false} style={{ backgroundColor: '#f5f5f5' }}>
+                            <Title level={4}>{tournamentData?.title || 'Название турнира'}</Title>
+                            <Text>Формат: {tournamentData?.format || 'Олимпийский'}</Text><br/>
+                            <Text>Участники: 32/32</Text>
+                        </Card>
                     )
                 },
                 {
-                    key: "2",
-                    label: `Участники турнира (${tournamentParticipants.length})`,
+                    key: 'bracket',
+                    label: 'Редактировать сетку',
                     children: (
-                        <>
-                            {/* ЛОКАЛЬНЫЙ ПОИСК ПО УЧАСТНИКАМ ТУРНИРА */}
-                            <Input 
-                                placeholder="Найти игрока (по имени или фамилии)..." 
-                                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                                value={searchParticipant}
-                                onChange={(e) => setSearchParticipant(e.target.value)}
-                                style={{ marginBottom: '16px', maxWidth: '400px', borderRadius: '8px' }}
-                                size="large"
-                            />
-                            <Table dataSource={filteredParticipants} rowKey="id" pagination={{ pageSize: 10 }}>
-                                <Table.Column dataIndex="firstName" title="Имя" />
-                                <Table.Column dataIndex="lastName" title="Фамилия" />
-                                <Table.Column dataIndex="rating" title="Рейтинг" render={(val) => <Tag color="blue">{val}</Tag>} />
-                                <Table.Column<IUser> 
-                                    title="Рабочая рука" 
-                                    render={(_, record) => record.preferences?.hand || "Не указана"} 
-                                />
-                                <Table.Column dataIndex="city" title="Город" />
-                            </Table>
-                        </>
+                        <div>
+                            {/* Выбор формата */}
+                            <Card style={{ marginBottom: 24, backgroundColor: '#e6f4ff', borderColor: '#91caff' }}>
+                                <Row justify="space-between" align="middle">
+                                    <Col>
+                                        <Text strong style={{ color: '#1677ff', display: 'block' }}>ФОРМАТ ПРОВЕДЕНИЯ</Text>
+                                        <Text type="secondary">Измените формат, чтобы увидеть другой редактор</Text>
+                                    </Col>
+                                    <Col>
+                                        <Select 
+                                            value={bracketFormat} 
+                                            onChange={setBracketFormat}
+                                            style={{ width: 300 }}
+                                            options={[
+                                                { value: 'Олимпийский формат (Плей-офф)', label: 'Олимпийский формат (Плей-офф)' },
+                                                { value: 'Олимпийский (Короткий 1/1)', label: 'Олимпийский (Короткий 1/1)' },
+                                                { value: 'Круговой формат (Round Robin)', label: 'Круговой формат (Round Robin)' },
+                                                { value: 'Группы + Плей-офф', label: 'Группы + Плей-офф' },
+                                                { value: 'Мексикано / Американо (Игроки)', label: 'Мексикано / Американо (Игроки)' },
+                                                { value: 'Американо (Фиксированные пары)', label: 'Американо (Фиксированные пары)' }
+                                            ]}
+                                        />
+                                    </Col>
+                                </Row>
+                            </Card>
+
+                            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+                                <Title level={3} style={{ margin: 0 }}>
+                                    {bracketFormat}
+                                </Title>
+                                <Button type="primary" size="large">Сохранить результаты</Button>
+                            </Row>
+
+                            {/* Рендер нужной сетки */}
+                            {bracketFormat.includes('Олимпийский') && renderOlympic()}
+                            
+                            {(bracketFormat.includes('Американо') || bracketFormat.includes('Мексикано')) && renderAmericano()}
+                            
+                            {bracketFormat === 'Круговой формат (Round Robin)' && renderRoundRobin()}
+                            
+                            {/* Группы + Плей-офф (Скриншоты 9 и 10) */}
+                            {bracketFormat === 'Группы + Плей-офф' && (
+                                <Tabs type="card" items={[
+                                    {
+                                        key: 'group', 
+                                        label: 'Групповой этап', 
+                                        children: (
+                                            <>
+                                                <Title level={5}>Группа А</Title>
+                                                {renderRoundRobin()}
+                                                <Title level={5} style={{ marginTop: 24 }}>Группа В</Title>
+                                                {renderRoundRobin()}
+                                            </>
+                                        )
+                                    },
+                                    {
+                                        key: 'playoff', 
+                                        label: 'Плей-офф', 
+                                        children: renderOlympic()
+                                    }
+                                ]} />
+                            )}
+                        </div>
                     )
                 }
             ]} />
-        </Edit>
+        </div>
     );
 }

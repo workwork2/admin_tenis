@@ -1,173 +1,116 @@
-// src/app/page.tsx
 "use client";
 
-import { Typography, Card, Row, Col, Statistic, Button, Divider, Space, Avatar } from "antd";
+import React, { useState } from "react";
+import { Typography, Card, Row, Col, Statistic, Button, Space, List, Segmented, Tabs, Divider, Badge } from "antd";
 import { useNavigation, useList } from "@refinedev/core";
-import { 
-  UserOutlined, 
-  ShopOutlined, 
-  InfoCircleOutlined, 
-  ArrowRightOutlined,
-  CheckCircleOutlined
-} from "@ant-design/icons";
-import { IClub, IUser } from "@/interfaces";
+import { UserAddOutlined, ShopOutlined, TrophyOutlined, TeamOutlined, AppstoreAddOutlined, PlaySquareOutlined, SyncOutlined } from "@ant-design/icons";
+import { IClub, IUser, ITournament } from "@/interfaces";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 
 export default function DashboardPage() {
-  const { list } = useNavigation();
+  const { list, create, edit } = useNavigation();
+  const [timeRange, setTimeRange] = useState<string | number>('Все время');
 
   const rawUsers = useList<IUser>({ resource: "users" }) as any;
-  const usersQuery = rawUsers?.query || rawUsers;
-
   const rawClubs = useList<IClub>({ resource: "clubs" }) as any;
+  const rawTournaments = useList<ITournament>({ resource: "tournaments" }) as any;
+
+  const usersQuery = rawUsers?.query || rawUsers;
   const clubsQuery = rawClubs?.query || rawClubs;
+  const tournamentsQuery = rawTournaments?.query || rawTournaments;
 
-  const pendingClubsCount = clubsQuery?.data?.data?.filter((club: IClub) => club.status === 'pending').length || 0;
-  const approvedClubsCount = clubsQuery?.data?.total ? clubsQuery.data.total - pendingClubsCount : 0;
-
+  const pendingClubs = clubsQuery?.data?.data?.filter((club: IClub) => club.status === 'pending') || [];
+  
   return (
-    <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+    <div style={{ padding: "24px", maxWidth: "1400px", margin: "0 auto", backgroundColor: "#f0f2f5", minHeight: "100vh" }}>
       
-      {/* Приветственный Баннер */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #1890ff 0%, #00e676 100%)', 
-        padding: '40px 32px', 
-        borderRadius: '20px', 
-        color: 'white', 
-        marginBottom: '32px',
-        boxShadow: '0 10px 30px rgba(0, 230, 118, 0.2)'
-      }}>
-        <Title level={2} style={{ color: 'white', margin: 0, fontWeight: 800 }}>
-          Добро пожаловать в Padel Admin 👋
-        </Title>
-        <Paragraph style={{ color: 'rgba(255,255,255,0.9)', fontSize: "16px", marginTop: "12px", marginBottom: 0, maxWidth: "600px" }}>
-          Единая система управления платформой. Здесь вы можете оперативно модерировать новые клубы, управлять базой игроков и следить за общей статистикой.
-        </Paragraph>
-      </div>
+      <Row justify="space-between" align="middle" style={{ marginBottom: "24px" }}>
+        <Title level={3} style={{ margin: 0 }}>Сводка платформы</Title>
+        <Segmented options={['Сегодня', 'Неделя', 'Месяц', 'Все время']} value={timeRange} onChange={setTimeRange} />
+      </Row>
 
-      <Row gutter={[24, 24]}>
-        
-        {/* Карточка 1: Управление Клубами */}
-        <Col xs={24} sm={24} lg={12}>
-          <Card
-            hoverable
-            style={{ 
-              height: "100%", 
-              borderRadius: "20px", 
-              border: "none",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.04)" 
-            }}
-            // ОШИБКА ИСПРАВЛЕНА ЗДЕСЬ
-            styles={{ body: { padding: '32px' } }}
-          >
-            <Space align="center" style={{ marginBottom: '24px' }}>
-              <Avatar 
-                size={56} 
-                icon={<ShopOutlined />} 
-                style={{ backgroundColor: '#e6f7ff', color: '#1890ff' }} 
-              />
-              <div>
-                <Title level={4} style={{ margin: 0 }}>Клубы и Заявки</Title>
-                <Text type="secondary">Управление площадками</Text>
-              </div>
-            </Space>
+      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
+        <Col xs={24} sm={12} md={6}>
+          {/* ИСПРАВЛЕНИЕ ЗДЕСЬ: variant="borderless" вместо bordered={false} */}
+          <Card variant="borderless" style={{ borderRadius: "12px", boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <Statistic title={<Text type="secondary"><TeamOutlined /> Игроков</Text>} value={usersQuery?.data?.total || 0} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card variant="borderless" style={{ borderRadius: "12px", boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <Statistic title={<Text type="secondary"><ShopOutlined /> Клубов</Text>} value={clubsQuery?.data?.total || 0} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card variant="borderless" style={{ borderRadius: "12px", boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <Statistic title={<Text type="secondary"><TrophyOutlined /> Турниров</Text>} value={tournamentsQuery?.data?.total || 0} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card variant="borderless" style={{ borderRadius: "12px", boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <Statistic title={<Text type="secondary"><PlaySquareOutlined /> Матчей сыграно</Text>} value={1240} />
+          </Card>
+        </Col>
+      </Row>
 
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={12}>
+          <Card title="Панель управления" variant="borderless" style={{ borderRadius: "12px", height: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <Tabs defaultActiveKey="1" items={[
+              {
+                key: '1', label: 'Создание',
+                children: (
+                  <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                    <Button block type="dashed" size="large" icon={<UserAddOutlined />} onClick={() => create("users")}>Создать профиль игрока</Button>
+                    <Button block type="dashed" size="large" icon={<AppstoreAddOutlined />} onClick={() => create("clubs")}>Добавить новый клуб</Button>
+                    <Button block type="dashed" size="large" icon={<TrophyOutlined />} onClick={() => create("tournaments")}>Создать турнир</Button>
+                  </Space>
+                )
+              },
+              {
+                key: '2', label: 'Переходы',
+                children: (
+                  <Row gutter={[8, 8]}>
+                    <Col span={12}><Button block type="primary" ghost icon={<TeamOutlined />} onClick={() => list("users")}>Игроки</Button></Col>
+                    <Col span={12}><Button block type="primary" ghost icon={<ShopOutlined />} onClick={() => list("clubs")}>Клубы</Button></Col>
+                    <Col span={12}><Button block type="primary" ghost icon={<TrophyOutlined />} onClick={() => list("tournaments")}>Турниры</Button></Col>
+                  </Row>
+                )
+              }
+            ]} />
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={12}>
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
             <Row gutter={16}>
               <Col span={12}>
-                <Statistic
-                  title="Активные клубы"
-                  value={approvedClubsCount}
-                  valueStyle={{ fontSize: "36px", fontWeight: 800, color: '#262626' }}
-                  prefix={<CheckCircleOutlined style={{ color: '#52c41a', fontSize: '24px', marginRight: '8px' }} />}
-                />
+                <Card variant="borderless" style={{ borderRadius: "12px", background: "linear-gradient(135deg, #1677ff 0%, #0050b3 100%)", color: "white" }}>
+                  <Text style={{ color: "rgba(255,255,255,0.8)", display: "block", marginBottom: 8 }}><SyncOutlined spin style={{ marginRight: 8 }}/>Общий Рейтинг</Text>
+                  <Title level={4} style={{ color: "white", margin: 0 }}>Обновлен сегодня</Title>
+                  <Divider style={{ margin: "12px 0", borderColor: "rgba(255,255,255,0.3)" }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Text style={{ color: "rgba(255,255,255,0.8)" }}>Затронуто игроков:</Text><Text strong style={{ color: "#fff" }}>+412</Text>
+                  </div>
+                </Card>
               </Col>
               <Col span={12}>
-                <div style={{ 
-                  background: pendingClubsCount > 0 ? '#fff7e6' : '#f6ffed', 
-                  padding: '12px 16px', 
-                  borderRadius: '12px',
-                  border: `1px solid ${pendingClubsCount > 0 ? '#ffd591' : '#b7eb8f'}`
-                }}>
-                  <Statistic
-                    title={<span style={{ color: pendingClubsCount > 0 ? '#d46b08' : '#389e0d' }}>Новые заявки</span>}
-                    value={pendingClubsCount}
-                    valueStyle={{ 
-                      fontSize: "28px", 
-                      fontWeight: 800, 
-                      color: pendingClubsCount > 0 ? '#fa8c16' : '#52c41a' 
-                    }}
-                    prefix={pendingClubsCount > 0 ? <InfoCircleOutlined /> : null}
-                  />
-                </div>
+                <Card variant="borderless" style={{ borderRadius: "12px", height: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <Statistic title="Активные турниры (Live)" value={3} valueStyle={{ color: '#1677ff', fontWeight: 700 }} prefix={<Badge status="processing" color="blue" />} />
+                </Card>
               </Col>
             </Row>
 
-            <Divider style={{ margin: '24px 0' }} />
-            
-            <Button 
-              key="clubs-btn" 
-              type="primary" 
-              size="large" 
-              icon={<ArrowRightOutlined />} 
-              onClick={() => list("clubs")}
-              style={{ width: '100%', borderRadius: '10px', height: '48px', fontWeight: 600 }}
-            >
-              Перейти к модерации
-            </Button>
-          </Card>
+            <Card title="Уведомления" variant="borderless" style={{ borderRadius: "12px", boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} extra={<Badge count={pendingClubs.length} />}>
+                <List size="small" dataSource={pendingClubs} locale={{ emptyText: 'Нет новых заявок' }} renderItem={(club: IClub) => (
+                    <List.Item actions={[<Button key="review" size="small" type="primary" onClick={() => edit("clubs", club.id)}>Модерация</Button>]}>
+                    <List.Item.Meta title={club.name} description={club.city || 'Город не указан'} />
+                    </List.Item>
+                )} />
+            </Card>
+          </Space>
         </Col>
-
-        {/* Карточка 2: Управление Участниками */}
-        <Col xs={24} sm={24} lg={12}>
-          <Card
-            hoverable
-            style={{ 
-              height: "100%", 
-              borderRadius: "20px", 
-              border: "none",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.04)" 
-            }}
-            // ОШИБКА ИСПРАВЛЕНА ЗДЕСЬ
-            styles={{ body: { padding: '32px' } }}
-          >
-            <Space align="center" style={{ marginBottom: '24px' }}>
-              <Avatar 
-                size={56} 
-                icon={<UserOutlined />} 
-                style={{ backgroundColor: '#f6ffed', color: '#52c41a' }} 
-              />
-              <div>
-                <Title level={4} style={{ margin: 0 }}>Участники платформы</Title>
-                <Text type="secondary">База игроков и рейтинги</Text>
-              </div>
-            </Space>
-
-            <Statistic
-              title="Всего зарегистрировано"
-              value={usersQuery?.data?.total || 0}
-              valueStyle={{ fontSize: "48px", fontWeight: 800, color: '#262626' }}
-            />
-            
-            <Paragraph style={{ marginTop: "12px", color: "gray", minHeight: '44px' }}>
-              Просматривайте профили, редактируйте текущий рейтинг, рабочую руку и игровые предпочтения всех участников.
-            </Paragraph>
-
-            <Divider style={{ margin: '24px 0' }} />
-
-            <Button 
-              key="users-btn" 
-              type="default" 
-              size="large" 
-              icon={<UserOutlined />} 
-              onClick={() => list("users")}
-              style={{ width: '100%', borderRadius: '10px', height: '48px', fontWeight: 600 }}
-            >
-              Управление базой игроков
-            </Button>
-          </Card>
-        </Col>
-
       </Row>
     </div>
   );

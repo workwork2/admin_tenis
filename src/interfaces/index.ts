@@ -1,5 +1,3 @@
-// src/interfaces/index.ts
-
 export interface IUser {
     id: number;
     firstName: string;
@@ -8,8 +6,9 @@ export interface IUser {
     email: string;
     city?: string;
     rating?: number;
-    status: 'active' | 'banned'; // СТАТУС ПОЛЬЗОВАТЕЛЯ
-    banUntil?: string;           // ЗАБАНЕН ДО (дата)
+    status: 'active' | 'banned';
+    banUntil?: string;
+    birthDate?: string;
     preferences?: {
         hand: 'Левая' | 'Правая' | 'Обе';
         side: 'Левый' | 'Правый' | 'Оба';
@@ -27,13 +26,14 @@ export interface IClub {
     id: number;
     name: string;
     address: string;
+    city?: string; // ИСПРАВЛЕНИЕ ОШИБКИ ЗДЕСЬ
     workingHours: string;
     website?: string;
     email: string;
     phone?: string;
     description?: string;
-    status: 'pending' | 'approved' | 'rejected' | 'banned'; // ДОБАВИЛИ BANNED
-    banUntil?: string; // ЗАБАНЕН ДО
+    status: 'pending' | 'approved' | 'rejected' | 'banned';
+    banUntil?: string;
     logo?: string;
     ownerName?: string;
     managers?: IManager[];
@@ -56,4 +56,5 @@ export interface ITournament {
     coverImage?: string;
     status: 'active' | 'inactive';
     participantIds?: number[];
+    waitlistIds?: number[];
 }
